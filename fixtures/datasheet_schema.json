@@ -1,0 +1,73 @@
+{
+  "original_file": "string, the file path or name",
+  "product_identity": {
+    "product_type": "string, e.g. three-phase hybrid solar inverter, battery-ready",
+    "series_name": "string, e.g. MOD 3~10KTL3-XH(BP)",
+    "models": ["list of model names covered in the datasheet"]
+  },
+  "main_application": {
+    "use_cases": "string, e.g. residential/small commercial PV system",
+    "battery_ready": "boolean",
+    "compatible_battery_systems": ["list of compatible battery systems, with type and capacity range"],
+    "backup_power_support": "string, describe if and how backup power is supported"
+  },
+  "pv_dc_input": {
+    "max_recommended_pv_power_per_model": "key values per model",
+    "max_dc_voltage": "number with unit",
+    "start_voltage": "number with unit",
+    "mppt_voltage_range": "range with unit",
+    "number_of_mppts": "integer",
+    "strings_per_mppt": "integer",
+    "max_input_current_per_mppt": "numbers with unit",
+    "max_short_circuit_current_per_mppt": "numbers with unit"
+  },
+  "ac_grid_output": {
+    "nominal_ac_power_per_model": "key values per model",
+    "max_ac_power_per_model": "key values per model",
+    "max_ac_current_per_model": "key values per model",
+    "grid_type": "e.g. 3-phase, 3W+N+PE, voltage levels",
+    "frequency": "Hz values",
+    "power_factor_range": "string or range",
+    "thd": "total harmonic distortion, if given",
+    "backup_output_ratings": "voltage, frequency, and power for backup output if present"
+  },
+  "battery_interface": {
+    "compatible_battery_type": "e.g. high-voltage lithium battery, brand/system name",
+    "operating_voltage_range": "range with unit",
+    "max_charge_power": "number with unit",
+    "max_discharge_power": "number with unit",
+    "max_operating_current": "number with unit"
+  },
+  "efficiency": {
+    "max_efficiency_per_model": "numbers with unit",
+    "european_efficiency_per_model": "numbers with unit"
+  },
+  "protection_and_safety": {
+    "dc_protection": ["e.g. reverse polarity, DC switch, AFCI"],
+    "ac_protection": ["e.g. short-circuit, residual current, anti-islanding"],
+    "surge_protection": "Type and side (DC/AC) if given",
+    "monitoring_of_faults": ["e.g. insulation, ground fault, string fault monitoring"]
+  },
+  "monitoring_and_communication": {
+    "monitoring_features": ["e.g. 24h self-consumption monitoring"],
+    "interfaces": ["e.g. USB, RS485, WiFi, GPRS, LAN, RF, with which are optional"],
+    "display_type": "e.g. OLED + LED",
+    "app_or_platform": "name if given"
+  },
+  "environment_and_installation": {
+    "operating_temperature_range": "range with unit",
+    "max_altitude": "number with unit",
+    "protection_class": "e.g. IP66",
+    "cooling_method": "e.g. natural convection",
+    "nighttime_consumption": "number with unit",
+    "weight_per_model": "values per model",
+    "dimensions_per_model": "values per model"
+  },
+  "compliance_and_certifications": {
+    "grid_codes": ["list of standards and codes"],
+    "safety_and_others": ["list of safety or EMC standards"]
+  },
+  "key_marketing_features": [
+    "short bullet list of highlighted features from cover page or main feature section"
+  ]
+}
