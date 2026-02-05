@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .env
 data/
+!data/markitdown/tasks/.gitkeep
 *.egg-info/
 dist/
 .pytest_cache/
