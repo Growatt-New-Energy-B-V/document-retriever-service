@@ -68,40 +68,71 @@ async def _process_task(task_id: str) -> None:
         if not files:
             raise FileNotFoundError(f"No uploaded file found for task {task_id}")
         file_path = str(files[0])
+        file_size = Path(file_path).stat().st_size
+        logger.info(f"Task {task_id}: file={file_path} ({file_size} bytes)")
 
         schema = json.loads(task["schema_json"])
+        logger.info(f"Task {task_id}: schema has {len(schema)} top-level keys: {list(schema.keys())}")
+        logger.info(
+            f"Task {task_id}: config timeout={settings.AGENT_TIMEOUT}s, "
+            f"retries={settings.AGENT_MAX_RETRIES}, mcp_url={settings.MCP_TOOLS_URL}"
+        )
 
         # Run extraction agent with retry
         from .agent import run_extraction
 
         last_error = None
         for attempt in range(settings.AGENT_MAX_RETRIES + 1):
+            attempt_start = time.time()
+            logger.info(f"Task {task_id}: attempt {attempt+1}/{settings.AGENT_MAX_RETRIES+1}")
             try:
-                index_time_start = time.time()
                 result = await asyncio.wait_for(
                     run_extraction(file_path, schema),
                     timeout=settings.AGENT_TIMEOUT,
                 )
                 total_time = time.time() - start_time
+                attempt_time = time.time() - attempt_start
 
+                sdk_usage = result.pop("usage", {})
                 timing = {
                     "total_seconds": round(total_time, 1),
+                    **sdk_usage,
                 }
 
+                logger.info(
+                    f"Task {task_id}: attempt {attempt+1} succeeded in {attempt_time:.1f}s "
+                    f"(total {total_time:.1f}s)"
+                )
                 await update_task_result(task_id, result, timing)
-                logger.info(f"Task {task_id} succeeded in {total_time:.1f}s")
+                logger.info(f"Task {task_id} result saved")
                 return
 
-            except Exception as e:
-                last_error = e
+            except asyncio.TimeoutError:
+                attempt_time = time.time() - attempt_start
+                last_error = TimeoutError(
+                    f"Agent timed out after {attempt_time:.0f}s (limit {settings.AGENT_TIMEOUT}s)"
+                )
+                logger.error(f"Task {task_id}: attempt {attempt+1} TIMEOUT after {attempt_time:.0f}s")
                 if attempt < settings.AGENT_MAX_RETRIES:
-                    logger.warning(f"Task {task_id} attempt {attempt+1} failed: {e}, retrying...")
+                    logger.info(f"Task {task_id}: retrying in 2s...")
+                    await asyncio.sleep(2)
+
+            except Exception as e:
+                attempt_time = time.time() - attempt_start
+                last_error = e
+                logger.warning(
+                    f"Task {task_id}: attempt {attempt+1} failed after {attempt_time:.1f}s: "
+                    f"{type(e).__name__}: {e}"
+                )
+                if attempt < settings.AGENT_MAX_RETRIES:
+                    logger.info(f"Task {task_id}: retrying in 2s...")
                     await asyncio.sleep(2)
 
         raise last_error
 
     except Exception as e:
-        logger.exception(f"Task {task_id} failed: {e}")
+        total_time = time.time() - start_time
+        logger.exception(f"Task {task_id} failed after {total_time:.1f}s: {type(e).__name__}: {e}")
         await update_task_error(task_id, str(e)[:500])
 
 
