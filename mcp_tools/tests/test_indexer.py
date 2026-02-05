@@ -134,3 +134,92 @@ def test_build_idf():
     assert isinstance(idf, dict)
     # Common words should have lower IDF than rare words
     assert len(idf) > 0
+
+
+# --- Validation tests ---
+
+from server.indexer import validate_and_normalize
+
+
+SAMPLE_SCHEMA = {
+    "product_identity": {
+        "product_type": "string",
+        "series_name": "string",
+        "models": ["list"],
+    },
+    "pv_dc_input": {
+        "max_dc_voltage": "number with unit",
+        "number_of_mppts": "integer",
+    },
+}
+
+
+def test_validate_complete_data():
+    data = {
+        "product_identity": {
+            "product_type": "Hybrid Inverter",
+            "series_name": "MOD 8K",
+            "models": ["MOD 8K", "MOD 10K"],
+        },
+        "pv_dc_input": {
+            "max_dc_voltage": "1100V",
+            "number_of_mppts": 2,
+        },
+    }
+    result = validate_and_normalize(data, SAMPLE_SCHEMA)
+    assert result["ok"] is True
+    assert len(result["errors"]) == 0
+    assert len(result["warnings"]) == 0
+
+
+def test_validate_missing_keys():
+    data = {
+        "product_identity": {
+            "product_type": "Hybrid Inverter",
+            # missing series_name and models
+        },
+        # missing pv_dc_input entirely
+    }
+    result = validate_and_normalize(data, SAMPLE_SCHEMA)
+    assert any("series_name" in w for w in result["warnings"])
+    assert any("models" in w for w in result["warnings"])
+    assert any("pv_dc_input" in w for w in result["warnings"])
+    # Normalized should have all keys
+    assert "series_name" in result["normalized"]["product_identity"]
+    assert result["normalized"]["product_identity"]["series_name"] is None
+    assert "pv_dc_input" in result["normalized"]
+
+
+def test_validate_type_mismatch():
+    data = {
+        "product_identity": "not a dict",
+        "pv_dc_input": {
+            "max_dc_voltage": "1100V",
+            "number_of_mppts": 2,
+        },
+    }
+    result = validate_and_normalize(data, SAMPLE_SCHEMA)
+    assert result["ok"] is False
+    assert any("expected object" in e for e in result["errors"])
+
+
+def test_validate_normalizes_ranges():
+    data = {
+        "product_identity": {
+            "product_type": "Inverter",
+            "series_name": "MOD",
+            "models": [],
+        },
+        "pv_dc_input": {
+            "max_dc_voltage": "1000~1500V",
+            "number_of_mppts": 2,
+        },
+    }
+    result = validate_and_normalize(data, SAMPLE_SCHEMA)
+    assert result["normalized"]["pv_dc_input"]["max_dc_voltage"] == "1000-1500V"
+
+
+def test_validate_null_data():
+    result = validate_and_normalize(None, SAMPLE_SCHEMA)
+    assert "normalized" in result
+    assert result["normalized"]["product_identity"]["product_type"] is None
