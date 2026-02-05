@@ -19,7 +19,11 @@ ENV PYTHONUNBUFFERED=1
 ENV DATA_DIR=/data
 ENV DB_PATH=/data/tasks.db
 
-RUN mkdir -p /data/uploads /data/cache
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g 1000 -m appuser \
+    && mkdir -p /data/uploads /data/cache \
+    && chown -R 1000:1000 /data /app
+
+USER 1000:1000
 
 EXPOSE 8000
 
