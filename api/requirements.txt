@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+aiosqlite
+claude-agent-sdk>=0.1.29
+python-multipart
+ulid-py
+pydantic
+pydantic-settings
+httpx
+pytest
+pytest-asyncio
+pytest-timeout
