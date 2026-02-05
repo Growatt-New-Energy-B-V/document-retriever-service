@@ -1,0 +1,63 @@
+services:
+  document-retriever:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM config — pass through all Anthropic-compatible env vars from host
+      - ANTHROPIC_API_KEY
+      - ANTHROPIC_AUTH_TOKEN
+      - ANTHROPIC_BASE_URL
+      - ANTHROPIC_DEFAULT_HAIKU_MODEL
+      - ANTHROPIC_DEFAULT_SONNET_MODEL
+      - ANTHROPIC_DEFAULT_OPUS_MODEL
+      - API_TIMEOUT_MS
+      # Service config
+      - MCP_TOOLS_URL=http://mcp-tools:8001/sse
+      - DATA_DIR=/data
+      - DB_PATH=/data/tasks.db
+    volumes:
+      - ./data:/data
+    depends_on:
+      mcp-tools:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mcp-tools:
+    build: ./mcp_tools
+    ports:
+      - "8001:8001"
+    environment:
+      - MARKITDOWN_URL=http://markitdown:8000
+      - DATA_DIR=/data
+    volumes:
+      - ./data:/data
+    depends_on:
+      markitdown:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  markitdown:
+    build:
+      context: ./markitdown-vision-service
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./data/markitdown:/data
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - OPENAI_API_TOKEN=${OPENAI_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
