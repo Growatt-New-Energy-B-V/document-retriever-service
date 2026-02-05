@@ -18,11 +18,14 @@ class MarkitdownClient:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
-    async def convert_to_markdown(self, file_path: str) -> str:
+    async def convert_to_markdown(
+        self, file_path: str, describe_images: bool = True
+    ) -> str:
         """Upload a file to markitdown, poll until done, return markdown text.
 
         Args:
             file_path: Path to the file to convert.
+            describe_images: Whether to use vision LLM to describe images.
 
         Returns:
             The markdown text output.
@@ -38,7 +41,10 @@ class MarkitdownClient:
             # POST file
             with open(file_path, "rb") as f:
                 files = {"file": (path.name, f, "application/octet-stream")}
-                resp = await client.post(f"{self.base_url}/tasks", files=files)
+                params = {"describe_images": str(describe_images).lower()}
+                resp = await client.post(
+                    f"{self.base_url}/tasks", files=files, params=params
+                )
                 resp.raise_for_status()
                 task_data = resp.json()
 
