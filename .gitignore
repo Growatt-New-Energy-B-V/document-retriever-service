@@ -7,5 +7,4 @@ data/
 dist/
 .pytest_cache/
 .mypy_cache/
-markitdown-vision-service/
 fixtures/
