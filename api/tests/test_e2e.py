@@ -6,7 +6,7 @@ Requires:
   - Fixture files in /app/fixtures/ or ../fixtures/
 
 Run:
-  docker compose run --rm -e ANTHROPIC_API_KEY document-retriever \
+  docker compose run --rm -e ANTHROPIC_API_KEY document-retriever-service \
     pytest tests/test_e2e.py -v --timeout=300
 """
 import json

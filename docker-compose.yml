@@ -1,5 +1,5 @@
 services:
-  document-retriever:
+  document-retriever-service:
     build: ./api
     ports:
       - "8000:8000"
