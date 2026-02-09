@@ -1,4 +1,4 @@
-# document-retriever
+# document-retriever-service
 
 Extract structured data from uploaded documents (PDF, DOCX, TXT, MD, HTML) into
 JSON using Claude as an extraction agent with custom MCP tools.
@@ -14,7 +14,7 @@ JSON using Claude as an extraction agent with custom MCP tools.
 
 ```bash
 git clone <this-repo>
-cd document-retriever
+cd document-retriever-service
 git submodule update --init --recursive
 ```
 
@@ -55,7 +55,7 @@ docker compose up
 ```
 
 Wait for all 3 services to report healthy:
-- `document-retriever` on http://localhost:8000
+- `document-retriever-service` on http://localhost:8000
 - `mcp-tools` on http://localhost:8001
 - `markitdown` on http://localhost:8002
 
@@ -90,7 +90,7 @@ Three services:
 
 | Service | Port | Role |
 |---------|------|------|
-| `document-retriever` | 8000 | API + task queue + Claude agent |
+| `document-retriever-service` | 8000 | API + task queue + Claude agent |
 | `mcp-tools` | 8001 | MCP server with 4 document tools |
 | `markitdown` | 8002 | Document -> Markdown conversion |
 
@@ -118,6 +118,6 @@ docker run --rm -v "$(pwd)/api:/app" -w /app python:3.11-slim \
   sh -c "pip install -q fastapi uvicorn aiosqlite ulid-py python-multipart httpx pydantic pydantic-settings pytest 'pytest-asyncio<1.0' && python -m pytest tests/test_smoke.py -v"
 
 # E2E test (requires all services running + API key)
-docker compose run --rm -e ANTHROPIC_API_KEY document-retriever \
+docker compose run --rm -e ANTHROPIC_API_KEY document-retriever-service \
   pytest tests/test_e2e.py -v --timeout=300
 ```

@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="document-retriever",
+    title="document-retriever-service",
     description="Extract structured data from documents using Claude + MCP tools",
     version="0.1.0",
     lifespan=lifespan,
